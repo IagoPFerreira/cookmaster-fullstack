@@ -8,9 +8,9 @@ O ideal é que os momentos sejam iniciados e finalizados na mesma mentoria, é p
 
 Cada momento começa exatamente do final do anterior, é possível encontrar de forma comprimida o código e o que foi desenvolvido em cada momento neste mesmo repositório.
 
-# Primeiro momento - Configurando o projeto
+## Primeiro momento - Configurando o projeto
 
-Visto que o projeto vai ser desenvolvido do 0, é bom mostrar para as pessoas estudantes o que nós iremos desenvolver, para isso, podemos usar um rascunho do que será desenvolvido [Excalidraw](https://excalidraw.com/#json=lkiElqkQBpb8UAdIoGBlE,Kq3kWqJxSfpySu8a3eEXuw).
+Visto que o projeto vai ser desenvolvido do 0, é bom mostrar para as pessoas estudantes o que nós iremos desenvolver, para isso, podemos usar um rascunho do que será desenvolvido [Excalidraw](https://excalidraw.com/#json=6wcoKP05324pM-kWfEPJc,8l9ZOf9zpwMn1Y8nOyL0XA).
 
 > OE: fale sobre o fluxo de receitas, que iremos fazer um CRUD completo da rota /recipes, fale das tabelas esquematizadas, que iremos criar uma tabela somente para receitas, uma somente para os ingredientes e uma tabela intermediária entre essas 2.
 
@@ -255,7 +255,7 @@ git push triboB cookmaster-configs-iniciais
 > OE: Final do primeiro momento. Tire dúvidas e deixe aberto para interação das PEs.
 > Se tiver tempo para o começar e terminar o próximo momento, execute-o, se não, encerre a mentoria dando um leve spoiler do que será visto na próxima mentoria.
 
-# Segundo momento - Configurando os containers
+## Segundo momento - Configurando os containers
 
 <details>
 <summary><strong>Iniciando os Containers</strong></summary>
@@ -440,6 +440,164 @@ git push triboB cookmaster-docker
 ---
 
 > OE: Final do segundo momento. Tire dúvidas e deixe aberto para interação das PEs.
+> Se tiver tempo para o começar e terminar o próximo momento, execute-o, se não, encerre a mentoria dando um leve spoiler do que será visto na próxima mentoria.
+
+## Terceiro momento - Normalizando o banco de dados
+
+Abra o [Excalidraw](https://excalidraw.com/#json=6wcoKP05324pM-kWfEPJc,8l9ZOf9zpwMn1Y8nOyL0XA) que contém o desenho inicial da nossa aplicação e vá para a parte do banco de dados, vamos explicar a lógica por trás dessa normalização.
+
+Toda receita deve ter um `nome`, os `ingredientes` utilizados e o `modo de preparação`, para salvar no nosso banco, é ideal que cada receita tenha também um id único. Como podem ter vários ingredientes e que podem se repetir em mais de uma receita, o ideal é que exista uma tabela só para os ingredientes e uma tabela intermediária entre as receitas e os ingredientes.
+
+<details>
+<summary><strong>Estruturando o Banco</strong></summary>
+
+> OE: Os comandos a seguir estarão considerando que o seu terminal esteja dentro do diretório `backend`
+
+1. Crie o diretório `database`:
+
+~~~bash
+mkdir src/database
+~~~
+
+2. Crie o arquivo `cookmaster.sql`:
+
+~~~bash
+touch src/database/cookmaster.sql
+~~~
+
+> OE: Os próximos passos estarão considerando que você está editando o arquivo `cookmaster.sql`
+> Após cada passo, rode as querys
+
+3. Adicione as querys para droppar e criar o banco:
+
+~~~sql
+DROP DATABASE IF EXISTS cookmaster;
+
+CREATE DATABASE cookmaster;
+~~~
+
+4. Adicione a query para criar a tabela `recipes`:
+
+~~~sql
+CREATE TABLE cookmaster.recipes(
+  id INTEGER NOT NULL PRIMARY KEY,
+  name VARCHAR(25) NOT NULL,
+  preparation VARCHAR(500) NOT NULL
+);
+~~~
+
+5. Adicione a query para popular a tabela `recipes`:
+
+~~~sql
+INSERT INTO cookmaster.recipes VALUES
+  (1, 'banana caramelizada', 'coloque o açúcar na frigideira até virar caramelo e jogue a banana'),
+  (2, 'Frango do Jacquin', '10 min no forno'),
+  (3, 'Pudim de leite condensado', 'bata o leite condensado, o creme de leite e os ovos no liquidificador por 5 minutos, enquanto isso, coloque o açúcar na frigideira até virar caramelo, ponha o caramelo em uma forma e despeje a misturam em cima, coloque para gelar'),
+  (4, 'Bolo de fubá', 'coloque o fubá, a farinha de trigo e o fermento em pó em um recipiente e misture. Ponha no liquidificador, 3 ovos, o leite, o óleo e o açúcar. Junte as duas misturas e misture. Transfira a massa para uma forma untada. Leve para assar por 30 minutos'),
+  (5, 'Arroz doce', 'Misture o arroz com a água fria numa panela grande para cozinhar. Com duas gemas e açúcar, faça uma gemada e misture com o leite condensado. Misture o arroz com a gemada, o leite condensado e o leite de côco e continue mexendo por 5 min'),
+  (6, 'Bolo de abacate', 'Amasse o abacate até que vire uma pasta. Em uma batedeira, adicione o açúcar, a manteiga e bata até formar um creme depois adicione os outros ingredientes, adicione o abacate a massa. Despeje a massa em uma forma untada. Leve ao forno por 50 minutos');
+~~~
+
+6. Adicione a query para criar a tabela `ingredients`:
+
+~~~sql
+CREATE TABLE IF NOT EXISTS cookmaster.ingredients(
+  id INTEGER NOT NULL PRIMARY KEY,
+  name VARCHAR(50) NOT NULL
+);
+~~~
+
+7. Adicione a query para popular a tabela `ingredients`:
+
+~~~sql
+INSERT INTO cookmaster.ingredients VALUES
+  (1, 'Abacate amassado'),
+  (2, 'Açúcar'),
+  (3, 'Água'),
+  (4, 'Arroz'),
+  (5, 'Banana'),
+  (6, 'Baunilha'),
+  (7, 'Canela em pó'),
+  (8, 'Creme de leite'),
+  (9, 'Farinha de trigo'),
+  (10, 'Fermento em pó'),
+  (11, 'Frango'),
+  (12, 'Fubá'),
+  (13, 'Gemas'),
+  (14, 'Leite'),
+  (15, 'Leite condensado'),
+  (16, 'Leite de coco'),
+  (17, 'Leite em pó'),
+  (18, 'Manteiga'),
+  (19, 'Óleo'),
+  (20, 'Ovos');
+~~~
+
+8. Adicione a query para criar a tabela `recipes_ingredients`:
+
+~~~sql
+CREATE TABLE IF NOT EXISTS cookmaster.recipes_ingredients(
+  `recipe_id` INT NOT NULL, 
+  `ingredient_id` INT NOT NULL,
+  FOREIGN KEY (`recipe_id`) REFERENCES cookmaster.recipes (id),
+  FOREIGN KEY (`ingredient_id`) REFERENCES cookmaster.ingredients (id),
+  PRIMARY KEY (`recipe_id`, `ingredient_id`)
+);
+~~~
+
+9. Adicione a query para popular a tabela `recipes_ingredients`:
+
+~~~sql
+INSERT INTO cookmaster.recipes_ingredients VALUES
+  (1, 5),
+  (1, 2),
+  (2, 11),
+  (3, 15),
+  (3, 8),
+  (3, 20),
+  (3, 2),
+  (4, 12),
+  (4, 9),
+  (4, 10),
+  (4, 20),
+  (4, 14),
+  (4, 19),
+  (4, 2),
+  (5, 4),
+  (5, 15),
+  (5, 13),
+  (5, 2),
+  (5, 16),
+  (5, 7),
+  (5, 3),
+  (6, 1),
+  (6, 9),
+  (6, 18),
+  (6, 2),
+  (6, 20),
+  (6, 6),
+  (6, 10),
+  (6, 17);
+~~~
+
+> OE: Mostre como ficou o banco e cada uma das tabelas
+
+10. Faça um commit descritivo
+
+> OE: utilize a extensão `Conventional Commits`, se quiser, ou faça os commits de forma tradicional pelo terminal, ou use a aba `Source Control` do VSCode para fazer os commits.
+
+11. Faça um push:
+
+~~~bash
+git push triboA cookmaster-docker
+git push triboB cookmaster-docker
+~~~
+
+</details>
+
+---
+
+> OE: Final do terceiro momento. Tire dúvidas e deixe aberto para interação das PEs.
 > Se tiver tempo para o começar e terminar o próximo momento, execute-o, se não, encerre a mentoria dando um leve spoiler do que será visto na próxima mentoria.
 
 ~~~typescript
