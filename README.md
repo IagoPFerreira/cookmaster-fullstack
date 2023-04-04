@@ -1,6 +1,6 @@
 # Roteiro para as mentorias do Cookmaster
 
-Sequência de mentorias desenvolvidas para serem aplicadas na Turma 25, com o propósito de revisar e reforçar conteúdos nos quais as pessoas estudantes posuem dificuldades, esses conteúdos foram apontados pelas próprias pessoas estudantes no preenchimento [deste forms](https://forms.gle/6EdTi8LecdZVUiyt9), o resultado desse forms pode ser verificado [aqui](https://betrybe.slack.com/archives/C03N2F2FGKA/p1680096291916419?thread_ts=1680016591.667539&cid=C03N2F2FGKA).
+Sequência de mentorias desenvolvidas para serem aplicadas na Turma 25, com o propósito de revisar e reforçar conteúdos nos quais as pessoas estudantes possuem dificuldades, esses conteúdos foram apontados pelas próprias pessoas estudantes no preenchimento [deste forms](https://forms.gle/6EdTi8LecdZVUiyt9), o resultado desse forms pode ser verificado [aqui](https://betrybe.slack.com/archives/C03N2F2FGKA/p1680096291916419?thread_ts=1680016591.667539&cid=C03N2F2FGKA).
 
 Esse projeto vai ser desenvolvido do 0, desde da criação dos diretórios iniciais, até o deploy das aplicações totalmente funcionais e será um projeto Fullstack.
 
@@ -494,7 +494,7 @@ INSERT INTO cookmaster.recipes VALUES
   (2, 'Frango do Jacquin', '10 min no forno'),
   (3, 'Pudim de leite condensado', 'bata o leite condensado, o creme de leite e os ovos no liquidificador por 5 minutos, enquanto isso, coloque o açúcar na frigideira até virar caramelo, ponha o caramelo em uma forma e despeje a misturam em cima, coloque para gelar'),
   (4, 'Bolo de fubá', 'coloque o fubá, a farinha de trigo e o fermento em pó em um recipiente e misture. Ponha no liquidificador, 3 ovos, o leite, o óleo e o açúcar. Junte as duas misturas e misture. Transfira a massa para uma forma untada. Leve para assar por 30 minutos'),
-  (5, 'Arroz doce', 'Misture o arroz com a água fria numa panela grande para cozinhar. Com duas gemas e açúcar, faça uma gemada e misture com o leite condensado. Misture o arroz com a gemada, o leite condensado e o leite de côco e continue mexendo por 5 min'),
+  (5, 'Arroz doce', 'Misture o arroz com a água fria numa panela grande para cozinhar. Com duas gemas e açúcar, faça uma gemada e misture com o leite condensado. Misture o arroz com a gemada, o leite condensado e o leite de coco e continue mexendo por 5 min'),
   (6, 'Bolo de abacate', 'Amasse o abacate até que vire uma pasta. Em uma batedeira, adicione o açúcar, a manteiga e bata até formar um creme depois adicione os outros ingredientes, adicione o abacate a massa. Despeje a massa em uma forma untada. Leve ao forno por 50 minutos');
 ~~~
 

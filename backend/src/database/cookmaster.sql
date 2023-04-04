@@ -13,7 +13,7 @@ INSERT INTO cookmaster.recipes VALUES
   (2, 'Frango do Jacquin', '10 min no forno'),
   (3, 'Pudim de leite condensado', 'bata o leite condensado, o creme de leite e os ovos no liquidificador por 5 minutos, enquanto isso, coloque o açúcar na frigideira até virar caramelo, ponha o caramelo em uma forma e despeje a misturam em cima, coloque para gelar'),
   (4, 'Bolo de fubá', 'coloque o fubá, a farinha de trigo e o fermento em pó em um recipiente e misture. Ponha no liquidificador, 3 ovos, o leite, o óleo e o açúcar. Junte as duas misturas e misture. Transfira a massa para uma forma untada. Leve para assar por 30 minutos'),
-  (5, 'Arroz doce', 'Misture o arroz com a água fria numa panela grande para cozinhar. Com duas gemas e açúcar, faça uma gemada e misture com o leite condensado. Misture o arroz com a gemada, o leite condensado e o leite de côco e continue mexendo por 5 min'),
+  (5, 'Arroz doce', 'Misture o arroz com a água fria numa panela grande para cozinhar. Com duas gemas e açúcar, faça uma gemada e misture com o leite condensado. Misture o arroz com a gemada, o leite condensado e o leite de coco e continue mexendo por 5 min'),
   (6, 'Bolo de abacate', 'Amasse o abacate até que vire uma pasta. Em uma batedeira, adicione o açúcar, a manteiga e bata até formar um creme depois adicione os outros ingredientes, adicione o abacate a massa. Despeje a massa em uma forma untada. Leve ao forno por 50 minutos');
 
 CREATE TABLE IF NOT EXISTS cookmaster.ingredients(
@@ -46,8 +46,10 @@ INSERT INTO cookmaster.ingredients VALUES
 CREATE TABLE IF NOT EXISTS cookmaster.recipes_ingredients(
   `recipe_id` INT NOT NULL, 
   `ingredient_id` INT NOT NULL,
-  FOREIGN KEY (`recipe_id`) REFERENCES cookmaster.recipes (id),
-  FOREIGN KEY (`ingredient_id`) REFERENCES cookmaster.ingredients (id),
+  FOREIGN KEY (`recipe_id`) REFERENCES cookmaster.recipes (id) ON DELETE CASCADE
+ ON UPDATE CASCADE,
+  FOREIGN KEY (`ingredient_id`) REFERENCES cookmaster.ingredients (id) ON DELETE CASCADE
+ ON UPDATE CASCADE,
   PRIMARY KEY (`recipe_id`, `ingredient_id`)
 );
 
