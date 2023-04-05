@@ -600,6 +600,1040 @@ git push triboB cookmaster-docker
 > OE: Final do terceiro momento. Tire dúvidas e deixe aberto para interação das PEs.
 > Se tiver tempo para o começar e terminar o próximo momento, execute-o, se não, encerre a mentoria dando um leve spoiler do que será visto na próxima mentoria.
 
+## Quarto momento - Criando as Múltiplas camadas
+
+Abra o [Excalidraw](https://excalidraw.com/#json=6wcoKP05324pM-kWfEPJc,8l9ZOf9zpwMn1Y8nOyL0XA) que contém o desenho inicial da nossa aplicação e vá para a parte do backend, mostre que iremos criar as camadas MSC e aborde dizendo que iremos usar TDD no desenvolvimento do nosso Backend.
+
+Iremos fazer testes unitários para cada camada antes de desenvolver o código e no final de cada fluxo, iremos fazer testes de integração para esse fluxo.
+
+<details>
+<summary><strong>Configuração dos testes</strong></summary>
+
+1. Crie uma branch nova:
+
+~~~bash
+gco -b cookmaster-crud-com-sql
+~~~
+
+> OE: Os comandos a seguir estarão considerando que o seu terminal esteja dentro do diretório `backend`
+
+2. Instale as dependências que iremos utilizar para os testes:
+
+~~~bash
+npm i -D @istanbuljs/nyc-config-typescript chai chai-http mocha nyc sinon sinon-chai chai-as-promised @types/mocha @types/sinon @types/sinon-chai @types/chai-as-promised
+~~~
+
+3. Adicione os seguintes scripts no arquivo `package.json`:
+
+~~~json
+// ...
+  "test": "mocha -r ts-node/register ./tests/{unit,integration}/**/*$NAME*.{test,spec}.ts -t 10000 --exit",
+  "test:watch": "mocha -r ts-node/register  ./tests/{unit,integration}/**/*$NAME*.{test,spec}.ts --watch --recursive --exit",
+  "coverage": "nyc npm run test",
+  "coverage:watch": "nyc npm run test:watch"
+// ..
+~~~
+
+4. Crie o arquivo `nyc.config.js`:
+
+~~~bash
+touch nyc.config.js
+~~~
+
+5. Adicione as seguintes configurações ao arquivo `nyc.config.js`:
+
+~~~javascript
+module.exports = {
+  all: true,
+  extends: "@istanbuljs/nyc-config-typescript",
+  exclude: [
+    'src/tests',
+    'src/database/config',
+    'src/database/migrations',
+    'src/database/seeders',
+    'src/database/models'
+  ],
+  include: ['src/**/*.ts']
+};
+~~~
+
+6. Crie os diretórios `tests` e `tests/unit`:
+
+~~~bash
+mkdir tests tests/unit
+~~~
+
+7. Faça um commit descritivo
+
+> OE: utilize a extensão `Conventional Commits`, se quiser, ou faça os commits de forma tradicional pelo terminal, ou use a aba `Source Control` do VSCode para fazer os commits.
+
+8. Faça um push:
+
+~~~bash
+git push triboA cookmaster-crud-com-sql
+git push triboB cookmaster-crud-com-sql
+~~~
+
+</details>
+
+<details>
+<summary><strong>Model GET /recipes</strong></summary>
+
+> OE: Os comandos a seguir estarão considerando que o seu terminal esteja dentro do diretório `backend`
+
+1. Crie o diretório `tests/unit/models`:
+
+~~~bash
+mkdir tests/unit/models
+~~~
+
+2. Crie o arquivo `Recipes.Model.test.ts`:
+
+~~~bash
+touch tests/unit/models/Recipes.Model.test.ts
+~~~
+
+> OE: Os próximos passos estarão considerando que você está editando o arquivo `Recipes.Model.test.ts`
+
+3. Adicione as seguintes linhas ao arquivo:
+
+~~~typescript
+// tests/unit/models/Recipes.Model.test.ts
+import * as sinon from 'sinon';
+import * as chai from 'chai';
+import { describe } from 'mocha';
+
+const { expect } = chai;
+~~~
+
+4. Crie um `describe`:
+
+~~~typescript
+// tests/unit/models/Recipes.Model.test.ts
+//...
+
+describe('Model GET /recipes', () => {
+  describe('Success cases', () => {});
+  describe('Failure cases', () => {});
+});
+
+~~~
+
+5. Dentro do `describe` de `Success cases` adicione o seguinte código:
+
+~~~typescript
+// tests/unit/models/Recipes.Model.test.ts
+// ...
+
+  describe('Success cases', () => {
+    describe('if there are recipes registered', () => {
+      before(() => {
+        sinon.stub(connection, "execute").resolves(allRecipesDbResponse);
+      });
+
+      after(() => {
+        sinon.restore();
+      });
+
+      it("return an array", async () => {
+        const recipes = await recipesModel.getAll();
+        expect(recipes).to.be.an('array');
+      });
+
+      it("return all recipes", async () => {
+        const recipes = await recipesModel.getAll();
+        expect(recipes).to.be.deep.equal(allRecipes);
+      });
+    });
+  });
+// ...
+
+~~~
+
+6. Dentro do `describe` de `Failure cases` adicione o seguinte código:
+
+~~~typescript
+// tests/unit/models/Recipes.Model.test.ts
+// ...
+
+  describe('Failure cases', () => {
+    describe('if there are no recipes registered', () => {
+      before(() => {
+        sinon
+          .stub(connection, "execute")
+          .resolves([]);
+      });
+
+      after(() => {
+        sinon.restore();
+      });
+
+      it("return a undefined", async () => {
+        const recipes = await recipesModel.getAll();
+        expect(recipes).to.be.undefined;
+      });
+    });
+  });
+// ...
+
+~~~
+
+> OE: Chame a atenção das PEs para o fato de ter alguns erros sendo apontados, que algumas coisas não estão referenciadas e que estamos tentando usar, coisas que ainda não existem, isso é normal no TDD.
+> Sairemos do arquivo `Recipes.Model.test.ts`
+
+7. Crie o diretório `mocks`:
+
+~~~bash
+mkdir tests/mocks
+~~~
+
+8. Crie o arquivo `recipes.mock.ts`:
+
+~~~bash
+touch tests/mocks/recipes.mock.ts
+~~~
+
+9. Abra o arquivo `tests/mocks/recipes.mock.ts` e adicione as seguintes linhas:
+
+~~~typescript
+// tests/mocks/recipes.mock.ts
+const allRecipesDbResponse = [ 
+  [
+    {
+      id: 1,
+      name: 'banana caramelizada',
+      preparation: 'coloque o açúcar na frigideira até virar caramelo e jogue a banana',
+      ingredients: [
+        'Açúcar',
+        'Banana'
+      ]
+    },
+    {
+      id: 2,
+      name: 'Frango do Jacquin',
+      preparation: '10 min no forno',
+      ingredients: [
+        'Frango'
+      ]
+    },
+    {
+      id: 3,
+      name: 'Pudim de leite condensado',
+      preparation: 'bata o leite condensado, o creme de leite e os ovos no liquidificador por 5 minutos, enquanto isso, coloque o açúcar na frigideira até virar caramelo, ponha o caramelo em uma forma e despeje a misturam em cima, coloque para gelar',
+      ingredients: [
+        'Açúcar',
+        'Creme de leite',
+        'Leite condensado',
+        'Ovos'
+      ]
+    },
+    {
+      id: 4,
+      name: 'Bolo de fubá',
+      preparation: 'coloque o fubá, a farinha de trigo e o fermento em pó em um recipiente e misture. Ponha no liquidificador, 3 ovos, o leite, o óleo e o açúcar. Junte as duas misturas e misture. Transfira a massa para uma forma untada. Leve para assar por 30 minutos',
+      ingredients: [
+        'Açúcar',
+        'Farinha de trigo',
+        'Fermento em pó',
+        'Fubá',
+        'Leite',
+        'Óleo',
+        'Ovos'
+      ]
+    },
+    {
+      id: 5,
+      name: 'Arroz doce',
+      preparation: 'Misture o arroz com a água fria numa panela grande para cozinhar. Com duas gemas e açúcar, faça uma gemada e misture com o leite condensado. Misture o arroz com a gemada, o leite condensado e o leite de coco e continue mexendo por 5 min',
+      ingredients: [
+        'Açúcar',
+        'Água',
+        'Arroz',
+        'Canela em pó',
+        'Gemas',
+        'Leite condensado',
+        'Leite de coco'
+      ]
+    },
+    {
+      id: 6,
+      name: 'Bolo de abacate',
+      preparation: 'Amasse o abacate até que vire uma pasta. Em uma batedeira, adicione o açúcar, a manteiga e bata até formar um creme depois adicione os outros ingredientes, adicione o abacate a massa. Despeje a massa em uma forma untada. Leve ao forno por 50 minutos',
+      ingredients: [
+        'Abacate amassado',
+        'Açúcar',
+        'Baunilha',
+        'Farinha de trigo',
+        'Fermento em pó',
+        'Leite em pó',
+        'Manteiga',
+        'Ovos'
+      ]
+    }
+  ]
+]
+
+const allRecipes = [
+  {
+    id: 1,
+    name: 'banana caramelizada',
+    preparation: 'coloque o açúcar na frigideira até virar caramelo e jogue a banana',
+    ingredients: [
+      'Açúcar',
+      'Banana'
+    ]
+  },
+  {
+    id: 2,
+    name: 'Frango do Jacquin',
+    preparation: '10 min no forno',
+    ingredients: [
+      'Frango'
+    ]
+  },
+  {
+    id: 3,
+    name: 'Pudim de leite condensado',
+    preparation: 'bata o leite condensado, o creme de leite e os ovos no liquidificador por 5 minutos, enquanto isso, coloque o açúcar na frigideira até virar caramelo, ponha o caramelo em uma forma e despeje a misturam em cima, coloque para gelar',
+    ingredients: [
+      'Açúcar',
+      'Creme de leite',
+      'Leite condensado',
+      'Ovos'
+    ]
+  },
+  {
+    id: 4,
+    name: 'Bolo de fubá',
+    preparation: 'coloque o fubá, a farinha de trigo e o fermento em pó em um recipiente e misture. Ponha no liquidificador, 3 ovos, o leite, o óleo e o açúcar. Junte as duas misturas e misture. Transfira a massa para uma forma untada. Leve para assar por 30 minutos',
+    ingredients: [
+      'Açúcar',
+      'Farinha de trigo',
+      'Fermento em pó',
+      'Fubá',
+      'Leite',
+      'Óleo',
+      'Ovos'
+    ]
+  },
+  {
+    id: 5,
+    name: 'Arroz doce',
+    preparation: 'Misture o arroz com a água fria numa panela grande para cozinhar. Com duas gemas e açúcar, faça uma gemada e misture com o leite condensado. Misture o arroz com a gemada, o leite condensado e o leite de coco e continue mexendo por 5 min',
+    ingredients: [
+      'Açúcar',
+      'Água',
+      'Arroz',
+      'Canela em pó',
+      'Gemas',
+      'Leite condensado',
+      'Leite de coco'
+    ]
+  },
+  {
+    id: 6,
+    name: 'Bolo de abacate',
+    preparation: 'Amasse o abacate até que vire uma pasta. Em uma batedeira, adicione o açúcar, a manteiga e bata até formar um creme depois adicione os outros ingredientes, adicione o abacate a massa. Despeje a massa em uma forma untada. Leve ao forno por 50 minutos',
+    ingredients: [
+      'Abacate amassado',
+      'Açúcar',
+      'Baunilha',
+      'Farinha de trigo',
+      'Fermento em pó',
+      'Leite em pó',
+      'Manteiga',
+      'Ovos'
+    ]
+  }
+]
+
+export { allRecipesDbResponse, allRecipes }
+
+~~~
+
+10. Faça a importação das constantes `allRecipesDbResponse` e `allRecipes` no arquivo `tests/unit/models/Recipes.Model.test.ts`:
+
+~~~typescript
+// tests/unit/models/Recipes.Model.test.ts
+// ...
+
+import { allRecipesDbResponse, allRecipes } from '../../mocks/recipes.mock';
+
+// ...
+~~~
+
+> OE: É esperado que dê o erro `'rootDir' is expected to contain all source files.`, vamos arrumar isso logo abaixo
+
+11. Adicione uma configuração no arquivo `tsconfig.json`:
+
+~~~json
+// "compilerOptions": {
+   // ...
+//  },
+"exclude": ["tests", "**/*.test.ts"]
+~~~
+
+12. Crie o diretório `src/models`:
+
+~~~bash
+mkdir src/models
+~~~
+
+13. Crie o arquivo `Recipes.Model.ts`:
+
+~~~bash
+touch src/models/Recipes.Model.ts
+~~~
+
+14. Abra o arquivo `src/models/Recipes.Model.ts` e adicione as seguintes linhas:
+
+~~~typescript
+// src/models/Recipes.Model.ts
+export default abstract class RecipesModel { 
+  constructor() {} 
+}
+~~~
+
+15. Importe e instancie a classe `RecipesModel` no arquivo `tests/unit/models/Recipes.Model.test.ts`:
+
+~~~typescript
+// tests/unit/models/Recipes.Model.test.ts
+// ...
+// import { allRecipesDbResponse, allRecipes } from '../../mocks/recipes.mock';
+import RecipesModel from '../../../src/models/Recipes.Model';
+
+const recipesModel = new RecipesModel();
+// ...
+~~~
+
+> OE: É esperado que dê erro falando que `a propriedade 'getAll' não existe no tipo 'RecipesModel'`, mostre isso para as PEs, vamos corrigir isso mais abaixo.
+
+16. Crie o método `getAll` dentro da classe `RecipesModel`:
+
+~~~typescript
+// src/models/Recipes.Model.ts
+// export default abstract class RecipesModel { 
+//   constructor() {} 
+
+  public async getAll() {}
+// }
+~~~
+
+> OE: Mostre que o erro anterior sumiu, mas ainda temos um erro com o `connection`, ainda não foi declarado, mostre isso para as PEs
+> E teremos também um erro de que o tipo `IRecipe` não foi declarado, iremos resolver isso mais tarde.
+
+17. Crie o arquivo `connection.ts`:
+
+~~~bash
+touch src/models/connection.ts
+~~~
+
+18. Abra o arquivo `src/models/connection.ts` e adicione as seguintes linhas:
+
+~~~typescript
+const mysql = require('mysql2/promise');
+
+const connection = mysql.createPool({
+  host: process.env.MYSQL_HOST || 'localhost',
+  user: process.env.MYSQL_USER || 'root',
+  password: process.env.MYSQL_PASSWORD || '123456',
+  port: process.env.MYSQL_PORT || '3002',
+  multipleStatements: true,
+});
+
+export default connection;
+~~~
+
+19. Faça a importação do `connection` no arquivo `tests/unit/models/Recipes.Model.test.ts`
+
+~~~typescript
+// tests/unit/models/Recipes.Model.test.ts
+// ...
+// import RecipesModel from '../../../src/models/Recipes.Model';
+import connection from '../../../src/models/connection';
+
+// ...
+~~~
+
+> OE: Mostre que não tem mais erros nos arquivos
+
+20. Execute algum script de teste:
+
+~~~bash
+npm test
+npm run test:watch
+npm run coverage
+npm run coverage:watch
+~~~
+
+> OE: Mostre o terminal após a execução dos testes, é esperado que o it `return a undefined` está passando antes da implementação, mude a assertion para `.not.to.be.undefined` e mostre que o it quebra.
+
+21. Crie o diretório `src/interfaces`:
+
+~~~bash
+mkdir src/interfaces
+~~~
+
+22. Crie o arquivo `IRecipe.interface.ts`:
+
+~~~bash
+touch src/interfaces/IRecipe.interface.ts
+~~~
+
+23. Abra o arquivo `src/interfaces/IRecipe.interface.ts` e adicione as seguintes linhas:
+
+~~~typescript
+// src/interfaces/IRecipe.interface.ts
+export interface IRecipe {
+  id?: number;
+  name: string;
+  ingredients: string[];
+  preparation: string;
+}
+~~~
+
+24. Importe a interface `IRecipe` no arquivo `src/models/Recipes.Model.ts` e tipe o retorno do método `getAll`:
+
+~~~typescript
+// src/models/Recipes.Model.ts
+import { IRecipe } from "../interfaces/IRecipe.interface";
+
+// ...
+  public async getAll(): Promise<IRecipe[] | undefined> {}
+
+// ...
+~~~
+
+25. Adicione as seguintes linhas no arquivo `src/models/Recipes.Model.ts` :
+
+~~~typescript
+// src/models/Recipes.Model.ts
+// ...
+
+  // public async getAll(): Promise<IRecipe[] | undefined> {
+    const query = `SELECT r.id, r.name, preparation, JSON_ARRAYAGG(i.name) as ingredients
+      FROM cookmaster.recipes as r JOIN cookmaster.recipes_ingredients as rp ON r.id = rp.recipe_id
+      JOIN cookmaster.ingredients as i ON i.id = rp.ingredient_id GROUP BY r.id ORDER BY r.id;`
+
+    const [recipes] = await connection.execute(query);
+
+    return recipes;
+  // }
+// ...
+~~~
+
+> OE: Rode novamente os testes e mostre eles passando.
+
+26. Faça um commit descritivo
+
+> OE: utilize a extensão `Conventional Commits`, se quiser, ou faça os commits de forma tradicional pelo terminal, ou use a aba `Source Control` do VSCode para fazer os commits.
+
+27. Faça um push:
+
+~~~bash
+git push triboA cookmaster-crud-com-sql
+git push triboB cookmaster-crud-com-sql
+~~~
+
+</details>
+
+<details>
+<summary><strong>Service GET /recipes</strong></summary>
+
+> OE: Os comandos a seguir estarão considerando que o seu terminal esteja dentro do diretório `backend`
+
+1. Crie o diretório `tests/unit/services`:
+
+~~~bash
+mkdir tests/unit/services
+~~~
+
+2. Crie o arquivo `Recipes.Service.test.ts`:
+
+~~~bash
+touch tests/unit/services/Recipes.Service.test.ts
+~~~
+
+> OE: Os próximos passos estarão considerando que você está editando o arquivo `Recipes.Service.test.ts`
+
+3. Adicione as seguintes linhas ao arquivo:
+
+~~~typescript
+// tests/unit/services/Recipes.Service.test.ts
+import * as sinon from 'sinon';
+import * as chai from 'chai';
+import chaiAsPromised from 'chai-as-promised';
+import { describe } from 'mocha';
+import RecipesModel from '../../../src/models/Recipes.Model';
+import { allRecipes } from '../../mocks/recipes.mock';
+import { IRecipe } from '../../../src/interfaces/IRecipe.interface';
+
+const recipesModel = new RecipesModel();
+
+chai.use(chaiAsPromised);
+
+const { expect } = chai;
+~~~
+
+> OE: Diga que já está aproveitando algumas coisas do teste do Model
+
+4. Crie um `describe`:
+
+~~~typescript
+// tests/unit/services/Recipes.Service.test.ts
+//...
+
+describe('Service GET /recipes', () => {
+  describe('Success cases', () => {});
+  describe('Failure cases', () => {});
+});
+
+~~~
+
+5. Dentro do `describe` de `Success cases` adicione o seguinte código:
+
+~~~typescript
+// tests/unit/services/Recipes.Service.test.ts
+// ...
+
+  describe('Success cases', () => {
+    describe('if there are recipes registered', () => {
+      before(() => {
+        sinon.stub(recipesModel, "getAll").resolves(allRecipes as IRecipe[]);
+      });
+
+      after(() => {
+        sinon.restore();
+      });
+
+      it("return an array", async () => {
+        const recipes = await recipesService.getAll();
+        expect(recipes).to.be.an('array');
+      });
+
+      it("return all recipes", async () => {
+        const recipes = await recipesService.getAll();
+        expect(recipes).to.be.deep.equal(allRecipes);
+      });
+    });
+  });
+// ...
+
+~~~
+
+6. Dentro do `describe` de `Failure cases` adicione o seguinte código:
+
+~~~typescript
+// tests/unit/services/Recipes.Service.test.ts
+// ...
+
+  describe('Failure cases', () => {
+    describe('if there are no recipes registered', () => {
+      before(() => {
+        sinon
+          .stub(recipesModel, "getAll")
+          .resolves(undefined);
+      });
+
+      after(() => {
+        sinon.restore();
+      });
+
+      it("return a undefined", async () => {
+        return expect(recipesService.getAll()).to.be.rejectedWith('NoRecipesFound');
+      });
+    });
+  });
+// ...
+
+~~~
+
+> OE: Chame a atenção das PEs para o fato de que novamente temos alguns de que estamos tentando usar coisas que ainda não existem.
+
+7. Crie o diretório `src/services`:
+
+~~~bash
+mkdir src/services
+~~~
+
+8. Crie o arquivo `Recipes.Service.ts`:
+
+~~~bash
+touch src/services/Recipes.Service.ts
+~~~
+
+9. Abra o arquivo `src/services/Recipes.Service.ts` e adicione as seguintes linhas:
+
+~~~typescript
+// src/services/Recipes.Service.ts
+export default abstract class RecipesService { 
+  constructor() {} 
+}
+~~~
+
+10. Importe e instancie a classe `RecipesService` no arquivo `tests/unit/services/Recipes.Service.test.ts`:
+
+~~~typescript
+// tests/unit/services/Recipes.Service.test.ts
+// ...
+// import RecipesModel from '../../../src/models/Recipes.Model';
+import RecipesService from '../../../src/services/Recipes.Service';
+// ...
+
+// const recipesModel = new RecipesModel();
+const recipesService = new RecipesService();
+// ...
+~~~
+
+> OE: É esperado que dê erro falando que `a propriedade 'getAll' não existe no tipo 'RecipesService'`, mostre isso para as PEs, vamos corrigir isso mais abaixo.
+
+11. Crie o método `getAll` dentro da classe `RecipesService`:
+
+~~~typescript
+// src/services/Recipes.Service.ts
+// export default abstract class RecipesService { 
+//   constructor() {} 
+
+  public async getAll() {}
+// }
+~~~
+
+> OE: Mostre que não tem mais erros nos arquivos
+
+12. Execute algum script de teste:
+
+~~~bash
+npm test
+npm run test:watch
+npm run coverage
+npm run coverage:watch
+~~~
+
+> OE: Chame a atenção para o fato dos testes não estarem passando
+
+13. Importe a interface `IRecipe` no arquivo `src/services/Recipes.Service.ts` e tipe o retorno do método `getAll`:
+
+~~~typescript
+// src/services/Recipes.Service.ts
+import { IRecipe } from "../interfaces/IRecipe.interface";
+
+// ...
+  public async getAll(): Promise<IRecipe[]> {}
+
+// ...
+~~~
+
+14. Adicione as seguintes linhas no arquivo `src/services/Recipes.Service.ts` :
+
+~~~typescript
+// src/services/Recipes.Service.ts
+// import { IRecipe } from "../interfaces/IRecipe.interface";
+import RecipesModel from "../models/Recipes.Model";
+
+// export default class RecipesService {
+  constructor(private _model = new RecipesModel()) {}
+
+  // public async getAll(): Promise<IRecipe[]> {
+    const recipes = await this._model.getAll();
+
+    if (!recipes) throw new Error('NoRecipesFound');
+    
+    return recipes;
+//   }
+// }
+~~~
+
+> OE: Rode novamente os testes e mostre eles passando.
+
+15. Faça um commit descritivo
+
+> OE: utilize a extensão `Conventional Commits`, se quiser, ou faça os commits de forma tradicional pelo terminal, ou use a aba `Source Control` do VSCode para fazer os commits.
+
+16. Faça um push:
+
+~~~bash
+git push triboA cookmaster-crud-com-sql
+git push triboB cookmaster-crud-com-sql
+~~~
+
+</details>
+
+<details>
+<summary><strong>Controller GET /recipes</strong></summary>
+
+> OE: Os comandos a seguir estarão considerando que o seu terminal esteja dentro do diretório `backend`
+
+1. Crie o diretório `tests/unit/controllers`:
+
+~~~bash
+mkdir tests/unit/controllers
+~~~
+
+2. Crie o arquivo `Recipes.Controller.test.ts`:
+
+~~~bash
+touch tests/unit/controllers/Recipes.Controller.test.ts
+~~~
+
+> OE: Os próximos passos estarão considerando que você está editando o arquivo `Recipes.Controller.test.ts`
+
+3. Adicione as seguintes linhas ao arquivo:
+
+~~~typescript
+// tests/unit/controllers/Recipes.Controller.test.ts
+import * as sinon from 'sinon';
+import * as chai from 'chai';
+import { describe } from 'mocha';
+import RecipesModel from '../../../src/models/Recipes.Model';
+import RecipesService from '../../../src/services/Recipes.Service';
+import { allRecipes } from '../../mocks/recipes.mock';
+import { IRecipe } from '../../../src/interfaces/IRecipe.interface';
+import chaiAsPromised from 'chai-as-promised';
+import sinonChai from 'sinon-chai';
+
+const recipesModel = new RecipesModel();
+const recipesService = new RecipesService(recipesModel);
+
+chai.use(chaiAsPromised);
+chai.use(sinonChai);
+
+const { expect } = chai;
+~~~
+
+> OE: Diga que já está aproveitando algumas coisas do teste do Model
+
+4. Crie um `describe`:
+
+~~~typescript
+// tests/unit/controllers/Recipes.Controller.test.ts
+//...
+
+describe('Controller GET /recipes', () => {
+  describe('Success cases', () => {});
+  describe('Failure cases', () => {});
+});
+
+~~~
+
+5. Dentro do `describe` de `Success cases` adicione o seguinte código:
+
+~~~typescript
+// tests/unit/controllers/Recipes.Controller.test.ts
+// ...
+  import { Request, Response } from 'express';
+
+// ...
+// describe('Controller GET /recipes', () => {
+  const request = {} as Request;
+  const response = {} as Response;
+  response.status = sinon.stub().returns(response);
+  response.json = sinon.stub().returns(response);
+
+  describe('Success cases', () => {
+    before(() => {
+      sinon.stub(recipesService, "getAll").resolves(allRecipes);
+    });
+
+    after(() => {
+      sinon.restore();
+    });
+
+    it("return status 200", async () => {
+      await recipesController.getAll(request, response);
+      expect(response.status).to.have.been.calledWith(200);
+    });
+
+    it("return all recipes", async () => {
+      await recipesController.getAll(request, response);
+      expect(response.json).to.have.been.calledWith(allRecipes);
+    });
+  });
+// ...
+
+~~~
+
+6. Dentro do `describe` de `Failure cases` adicione o seguinte código:
+
+~~~typescript
+// tests/unit/services/Recipes.Service.test.ts
+// ...
+
+  describe('Failure cases', () => {
+    const request = {} as Request;
+    const response = {} as Response;
+    response.status = sinon.stub().returns(response);
+    response.json = sinon.stub().returns(response);
+
+    before(() => {
+      sinon
+        .stub(recipesService, "getAll")
+        .onCall(0)
+        .throws(new Error('NoRecipesFound'))
+        .onCall(1)
+        .throws(new Error('Any error'));
+    });
+
+    after(() => {
+      sinon.restore();
+    });
+
+    describe('if there are no recipes registered', () => {
+      it("return status 404", async () => {
+        await recipesController.getAll(request, response);
+        expect(response.status).to.have.been.calledWith(404);
+      });
+
+      it("return message 'No recipes found'", async () => {
+        await recipesController.getAll(request, response);
+        expect(response.json).to.have.been.calledWith({
+          message: "No recipes found",
+        });
+      });
+    });
+
+    describe('if there is an error on the server', () => {
+      it("return status 500", async () => {
+        await recipesController.getAll(request, response);
+        expect(response.status).to.have.been.calledWith(500);
+      });
+
+      it("return message 'Internal Server Error'", async () => {
+        await recipesController.getAll(request, response);
+        expect(response.json).to.have.been.calledWith({
+          message: "Internal Server Error",
+        });
+      });
+    });
+  });
+// ...
+
+~~~
+
+> OE: Chame a atenção das PEs para o fato de ter alguns erros sendo apontados, que algumas coisas não estão referenciadas e que estamos coisas que ainda não existem, isso é normal no TDD.
+> Sairemos do arquivo `Recipes.Controller.test.ts`
+
+---
+
+7. Crie o diretório `controllers`:
+
+~~~bash
+mkdir src/controllers
+~~~
+
+8. Crie o arquivo `Recipes.Controller.ts`:
+
+~~~bash
+touch src/controllers/Recipes.Controller.ts
+~~~
+
+9. Abra o arquivo `src/controllers/Recipes.Controller.ts` e adicione as seguintes linhas:
+
+~~~typescript
+// src/controllers/Recipes.Controller.ts
+export default class RecipesController { 
+  constructor() {} 
+}
+~~~
+
+10. Importe e instancie a classe `Controller` no arquivo `tests/unit/controllers/Recipes.Controller.test.ts`:
+
+~~~typescript
+// ...
+// import RecipesService from '../../../src/services/Recipes.Service';
+import RecipesController from '../../src/controllers/Recipes.Controller';
+
+// ...
+const recipesService = new RecipesService(recipesModel);
+const recipesController = new RecipesController(recipesService);
+// ...
+~~~
+
+> OE: É esperado que dê erro falando que a classe esperava 0 argumentos e recebeu 1, mostre isso para as PEs, vamos corrigir isso mais abaixo.
+> É esperado que dê erro falando que `a propriedade 'getAll' não existe no tipo 'RecipesController'`, mostre isso para as PEs, vamos corrigir isso mais abaixo.
+
+11. Crie o método `getAll` dentro da classe `RecipesController`:
+
+~~~typescript
+// src/services/Recipes.Controller.ts
+
+import { Request, Response } from "express";
+
+// export default abstract class RecipesController { 
+//   constructor() {} 
+
+  public async getAll(req: Request, res: Response) {}
+// }
+~~~
+
+12. Execute algum script de teste:
+
+~~~bash
+npm test
+npm run test:watch
+npm run coverage
+npm run coverage:watch
+~~~
+
+> OE: Chame a atenção para o fato dos testes não estarem passando
+
+13. Importe a interface `IRecipe` no arquivo `src/services/Recipes.Controller.ts` e tipe o retorno do método `getAll`:
+
+~~~typescript
+// src/services/Recipes.Controller.ts
+import { IRecipe } from "../interfaces/IRecipe.interface";
+
+// ...
+  public async getAll(req: Request, res: Response): Promise<Response<IRecipe[]>> {}
+
+// ...
+~~~
+
+14. Adicione as seguintes linhas no arquivo `src/controller/Recipes.Controller.ts` :
+
+~~~typescript
+// src/controller/Recipes.Controller.ts
+// import { IRecipe } from "../interfaces/IRecipe.interface";
+import RecipeService from "../services/Recipes.Service"
+
+// export default class RecipesService {
+  constructor(private _service = new RecipeService()) {}
+
+  // public async getAll(): Promise<IRecipe[]> {
+
+    try {
+      const recipes = this._service.getAll()
+
+      return res.status(200).json(recipes);
+    } catch (err) {
+      if (err instanceof Error && err.message === 'NoRecipesFound') {
+        return res.status(404).json({ message: 'No recipes found' });
+      }
+      return res.status(500).json({ message: 'Internal Server Error' });
+    }
+//   }
+// }
+~~~
+
+> OE: Rode novamente os testes e mostre eles passando.
+
+15. Faça um commit descritivo
+
+> OE: utilize a extensão `Conventional Commits`, se quiser, ou faça os commits de forma tradicional pelo terminal, ou use a aba `Source Control` do VSCode para fazer os commits.
+
+16. Faça um push:
+
+~~~bash
+git push triboA cookmaster-crud-com-sql
+git push triboB cookmaster-crud-com-sql
+~~~
+
+</details>
+
+---
+
+> OE: Final do quarto momento. Tire dúvidas e deixe aberto para interação das PEs.
+> Se tiver tempo para o começar e terminar o próximo momento, execute-o, se não, encerre a mentoria dando um leve spoiler do que será visto na próxima mentoria.
+
 ~~~typescript
 
 ~~~
