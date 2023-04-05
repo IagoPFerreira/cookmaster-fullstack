@@ -451,15 +451,21 @@ Toda receita deve ter um `nome`, os `ingredientes` utilizados e o `modo de prepa
 <details>
 <summary><strong>Estruturando o Banco</strong></summary>
 
+1. Crie uma branch nova:
+
+~~~bash
+gco -b cookmaster-banco-de-dados
+~~~
+
 > OE: Os comandos a seguir estarão considerando que o seu terminal esteja dentro do diretório `backend`
 
-1. Crie o diretório `database`:
+2. Crie o diretório `database`:
 
 ~~~bash
 mkdir src/database
 ~~~
 
-2. Crie o arquivo `cookmaster.sql`:
+3. Crie o arquivo `cookmaster.sql`:
 
 ~~~bash
 touch src/database/cookmaster.sql
@@ -468,7 +474,7 @@ touch src/database/cookmaster.sql
 > OE: Os próximos passos estarão considerando que você está editando o arquivo `cookmaster.sql`
 > Após cada passo, rode as querys
 
-3. Adicione as querys para droppar e criar o banco:
+4. Adicione as querys para droppar e criar o banco:
 
 ~~~sql
 DROP DATABASE IF EXISTS cookmaster;
@@ -476,7 +482,7 @@ DROP DATABASE IF EXISTS cookmaster;
 CREATE DATABASE cookmaster;
 ~~~
 
-4. Adicione a query para criar a tabela `recipes`:
+5. Adicione a query para criar a tabela `recipes`:
 
 ~~~sql
 CREATE TABLE cookmaster.recipes(
@@ -486,7 +492,7 @@ CREATE TABLE cookmaster.recipes(
 );
 ~~~
 
-5. Adicione a query para popular a tabela `recipes`:
+6. Adicione a query para popular a tabela `recipes`:
 
 ~~~sql
 INSERT INTO cookmaster.recipes VALUES
@@ -498,7 +504,7 @@ INSERT INTO cookmaster.recipes VALUES
   (6, 'Bolo de abacate', 'Amasse o abacate até que vire uma pasta. Em uma batedeira, adicione o açúcar, a manteiga e bata até formar um creme depois adicione os outros ingredientes, adicione o abacate a massa. Despeje a massa em uma forma untada. Leve ao forno por 50 minutos');
 ~~~
 
-6. Adicione a query para criar a tabela `ingredients`:
+7. Adicione a query para criar a tabela `ingredients`:
 
 ~~~sql
 CREATE TABLE IF NOT EXISTS cookmaster.ingredients(
@@ -507,7 +513,7 @@ CREATE TABLE IF NOT EXISTS cookmaster.ingredients(
 );
 ~~~
 
-7. Adicione a query para popular a tabela `ingredients`:
+8. Adicione a query para popular a tabela `ingredients`:
 
 ~~~sql
 INSERT INTO cookmaster.ingredients VALUES
@@ -533,7 +539,7 @@ INSERT INTO cookmaster.ingredients VALUES
   (20, 'Ovos');
 ~~~
 
-8. Adicione a query para criar a tabela `recipes_ingredients`:
+9. Adicione a query para criar a tabela `recipes_ingredients`:
 
 ~~~sql
 CREATE TABLE IF NOT EXISTS cookmaster.recipes_ingredients(
@@ -545,7 +551,7 @@ CREATE TABLE IF NOT EXISTS cookmaster.recipes_ingredients(
 );
 ~~~
 
-9. Adicione a query para popular a tabela `recipes_ingredients`:
+10. Adicione a query para popular a tabela `recipes_ingredients`:
 
 ~~~sql
 INSERT INTO cookmaster.recipes_ingredients VALUES
@@ -582,11 +588,11 @@ INSERT INTO cookmaster.recipes_ingredients VALUES
 
 > OE: Mostre como ficou o banco e cada uma das tabelas
 
-10. Faça um commit descritivo
+11. Faça um commit descritivo
 
 > OE: utilize a extensão `Conventional Commits`, se quiser, ou faça os commits de forma tradicional pelo terminal, ou use a aba `Source Control` do VSCode para fazer os commits.
 
-11. Faça um push:
+12. Faça um push:
 
 ~~~bash
 git push triboA cookmaster-docker
