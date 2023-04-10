@@ -8,7 +8,7 @@ import { allRecipes } from '../../mocks/recipes.mock';
 import { IRecipe } from '../../../src/interfaces/IRecipe.interface';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 
 const recipesModel = new RecipesModel();
 const recipesService = new RecipesService(recipesModel);
@@ -25,6 +25,7 @@ describe('Controller GET /recipes', () => {
     const response = {} as Response;
     response.status = sinon.stub().returns(response);
     response.json = sinon.stub().returns(response);
+    const nextFunction = sinon.spy() as NextFunction;
 
     before(() => {
       sinon.stub(recipesService, "getAll").resolves(allRecipes);
@@ -35,12 +36,12 @@ describe('Controller GET /recipes', () => {
     });
 
     it("return status 200", async () => {
-      await recipesController.getAll(request, response);
+      await recipesController.getAll(request, response, nextFunction);
       expect(response.status).to.have.been.calledWith(200);
     });
 
     it("return all recipes", async () => {
-      await recipesController.getAll(request, response);
+      await recipesController.getAll(request, response, nextFunction);
       expect(response.json).to.have.been.calledWith(allRecipes);
     });
   });
@@ -50,6 +51,7 @@ describe('Controller GET /recipes', () => {
     const response = {} as Response;
     response.status = sinon.stub().returns(response);
     response.json = sinon.stub().returns(response);
+    const nextFunction = sinon.spy() as NextFunction;
 
     before(() => {
       sinon
@@ -65,30 +67,16 @@ describe('Controller GET /recipes', () => {
     });
 
     describe('if there are no recipes registered', () => {
-      it("return status 404", async () => {
-        await recipesController.getAll(request, response);
-        expect(response.status).to.have.been.calledWith(404);
-      });
-
-      it("return message 'No recipes found'", async () => {
-        await recipesController.getAll(request, response);
-        expect(response.json).to.have.been.calledWith({
-          message: "No recipes found",
-        });
+      it("call the 'next' function with the error 'NoRecipesFound'", async () => {
+        await recipesController.getAll(request, response, nextFunction);
+        expect(nextFunction).to.have.been.calledWith({ message: "NoRecipesFound" });
       });
     });
 
     describe('if there is an error on the server', () => {
-      it("return status 500", async () => {
-        await recipesController.getAll(request, response);
-        expect(response.status).to.have.been.calledWith(500);
-      });
-
-      it("return message 'Internal Server Error'", async () => {
-        await recipesController.getAll(request, response);
-        expect(response.json).to.have.been.calledWith({
-          message: "Internal Server Error",
-        });
+      it("call the 'next' function with the error 'Internal Server Error'", async () => {
+        await recipesController.getAll(request, response, nextFunction);
+        expect(nextFunction).to.have.been.calledWith({ message: "Any error" });
       });
     });
   });

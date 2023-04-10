@@ -1040,11 +1040,10 @@ touch src/models/connection.ts
 const mysql = require('mysql2/promise');
 
 const connection = mysql.createPool({
-  host: process.env.MYSQL_HOST || 'localhost',
-  user: process.env.MYSQL_USER || 'root',
-  password: process.env.MYSQL_PASSWORD || '123456',
-  port: process.env.MYSQL_PORT || '3002',
-  multipleStatements: true,
+  host: process.env.DB_HOST || 'localhost',
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASS || '123456',
+  port: process.env.DB_PORT || '3306'
 });
 
 export default connection;
@@ -1622,11 +1621,41 @@ import RecipeService from "../services/Recipes.Service"
 
 > OE: Rode novamente os testes e mostre eles passando.
 
-15. Faça um commit descritivo
+15. Crie o diretório `routers`:
+
+~~~bash
+mkdir src/routers
+~~~
+
+16. Crie o arquivo `Recipes.Router.ts`:
+
+~~~bash
+touch src/routes/Recipes.Router.ts
+~~~
+
+17. Abra o arquivo `src/routes/Recipes.Router.ts` e adicione as seguintes linhas:
+
+~~~typescript
+// src/routes/Recipes.Router.ts
+import { Router } from 'express';
+import RecipesController from '../controllers/Recipes.Controller';
+
+const recipesController = new RecipesController();
+
+const router = Router();
+
+router.route('/recipes')
+  .get((req, res) => recipesController.getAll(req, res))
+
+export default router;
+
+~~~
+
+18. Faça um commit descritivo
 
 > OE: utilize a extensão `Conventional Commits`, se quiser, ou faça os commits de forma tradicional pelo terminal, ou use a aba `Source Control` do VSCode para fazer os commits.
 
-16. Faça um push:
+19. Faça um push:
 
 ~~~bash
 git push triboA cookmaster-crud-com-sql
