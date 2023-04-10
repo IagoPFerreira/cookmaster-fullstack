@@ -626,7 +626,7 @@ gco -b cookmaster-crud-com-sql
 2. Instale as dependências que iremos utilizar para os testes:
 
 ~~~bash
-npm i -D @istanbuljs/nyc-config-typescript chai chai-http mocha nyc sinon sinon-chai chai-as-promised @types/mocha @types/sinon @types/sinon-chai @types/chai-as-promised
+npm i -D @istanbuljs/nyc-config-typescript chai chai-http mocha nyc sinon sinon-chai chai-as-promised @types/chai @types/chai-http @types/mocha @types/sinon @types/sinon-chai @types/chai-as-promised
 ~~~
 
 3. Adicione os seguintes scripts no arquivo `package.json`:
@@ -1667,7 +1667,190 @@ git push triboB cookmaster-crud-com-sql
 ---
 
 > OE: Final do quarto momento. Tire dúvidas e deixe aberto para interação das PEs.
-> Se tiver tempo para o começar e terminar o próximo momento, execute-o, se não, encerre a mentoria dando um leve spoiler do que será visto na próxima mentoria.
+> O próximo tópico é opcional, se tiver tempo para o começar e terminar o próximo tópico, execute-o, se não, encerre a mentoria dando um leve spoiler do que será visto no próximo mentorio.
+
+<details>
+<summary><strong>Teste de integração /recipes</strong></summary>
+
+> OE: Os comandos a seguir estarão considerando que o seu terminal esteja dentro do diretório `backend`
+
+1. Crie o diretório `tests/integration`:
+
+~~~bash
+mkdir tests/integration
+~~~
+
+2. Crie o arquivo `Recipes.test.ts`:
+
+~~~bash
+touch tests/integration/Recipes.test.ts
+~~~
+
+> OE: Os próximos passos estarão considerando que você está editando o arquivo `Recipes.test.ts`
+
+3. Adicione as seguintes linhas ao arquivo:
+
+~~~typescript
+// tests/integration/Recipes.test.ts
+import * as sinon from 'sinon';
+import * as chai from 'chai';
+// @ts-ignore
+import chaiHttp = require('chai-http');
+import { describe } from 'mocha';
+import { Response } from 'superagent';
+import app from '../../src/app';
+import connection from '../../src/models/connection';
+import { allRecipes, allRecipesDbResponse } from '../mocks/recipes.mock';
+
+chai.use(chaiHttp);
+
+let chaiLib = <any>chai;
+let chaiRequestLib = chaiLib.default.request;
+
+const { expect } = chai;
+~~~
+
+> OE: Diga que já está aproveitando algumas coisas do teste do Model
+
+4. Crie um `describe`:
+
+~~~typescript
+// tests/integration/Recipes.test.ts
+//...
+
+describe('GET /recipes', () => {
+  describe('GET /recipes', () => {
+  let response: Response;
+
+  describe('Success case', () => {});
+
+  describe('Failure cases', () => {});
+});
+});
+
+~~~
+
+5. Dentro do `describe` de `Success cases` adicione o seguinte código:
+
+~~~typescript
+// tests/integration/Recipes.test.ts
+//...
+
+// describe('GET /recipes', () => {
+  let response: Response;
+
+  describe('Success case', () => {
+    before(async () => {
+      sinon
+      .stub(connection, "execute")
+      .resolves(allRecipesDbResponse);
+
+      response = await chaiRequestLib(app).get('/recipes');
+    });
+    
+    after(()=>{
+      sinon.restore();
+    });
+      
+    it('return status 200', async () => {
+      expect(response).to.haveOwnProperty('status');
+      expect(response.status).to.be.eq(200);
+    });
+    
+    it('return all the recipes', async () => {
+      expect(response).to.haveOwnProperty('body');
+      expect(response.body).to.be.deep.equal(allRecipes);
+    });
+  });
+// });
+// ...
+
+~~~
+
+6. Dentro do `describe` de `Failure cases` adicione o seguinte código:
+
+~~~typescript
+// tests/integration/Recipes.test.ts
+//...
+  describe('Failure cases', () => {
+    let response: Response;
+    describe('if there are no recipes registered', () => {
+      before(async () => {
+        sinon
+        .stub(connection, "execute")
+        .onCall(0)
+        .resolves([])
+        .onCall(1)
+        .throws(new Error('Any error'));
+  
+        response = await chaiRequestLib(app).get('/recipes');
+      });
+      
+      after(()=>{
+        sinon.restore();
+      });
+
+      it('return status 404', async () => {        
+        expect(response).to.haveOwnProperty('status');
+        expect(response.status).to.be.eq(404);
+      });
+      
+      it('return message "No recipes found"', async () => {
+        expect(response).to.haveOwnProperty('body');
+        expect(response.body).to.haveOwnProperty('message');
+        expect(response.body.message).to.be.equal('No recipes found');
+      });
+    });
+  });
+// ...
+
+~~~
+
+> OE: Rode os testes de cobertura e mostre qual a cobertura dos arquivos.
+
+7. Crie um `describe`:
+
+~~~typescript
+// tests/integration/Recipes.test.ts
+//...
+
+describe('GET /', () => {});
+
+// describe('GET /recipes', () => {
+// ...
+
+~~~
+
+8. Dentro do `describe` de `GET /` adicione o seguinte código:
+
+~~~typescript
+// tests/integration/Recipes.test.ts
+//...
+
+// describe('GET /', () => {
+  let response: Response;
+
+  before(async () => {
+    response = await chaiRequestLib(app).get('/');
+  });
+
+  it('return status 200', async () => {
+    expect(response).to.haveOwnProperty('status');
+    expect(response.status).to.be.eq(200);
+  });
+  
+  it('return all the recipes', async () => {
+    expect(response).to.haveOwnProperty('body');
+    expect(response.text).to.be.equal('A API tá on fire!');
+  });
+// });
+// ...
+
+~~~
+
+> OE: Rode novamente os testes e mostre qual a cobertura dos arquivos agora.
+
+</details>
 
 ~~~typescript
 
